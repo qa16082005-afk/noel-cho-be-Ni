@@ -1,189 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Magic Christmas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magic Camera</title>
 
-<!-- LIBRARIES -->
+<!-- THREE -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- MEDIAPIPE -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
 <style>
-body {
-  margin: 0;
-  overflow: hidden;
-  background: black;
-  font-family: "Segoe UI", sans-serif;
+html,body{
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:black;
+  font-family:sans-serif;
 }
 
-/* FULL CAMERA BACKGROUND */
-#camera {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: 0;
+/* CAMERA FULL BACKGROUND */
+.input_video{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  z-index:0;
+  transform:scaleX(-1);
 }
 
 /* THREE CANVAS */
-#canvas-container {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
+#canvas-container{
+  position:fixed;
+  top:0;left:0;
+  width:100vw;
+  height:100vh;
+  z-index:1;
+  pointer-events:none;
 }
 
 /* UI */
-#ui-layer {
-  position: fixed;
-  bottom: 30px;
-  width: 100%;
-  text-align: center;
-  z-index: 10;
-  pointer-events: none;
+#ui-layer{
+  position:fixed;
+  bottom:30px;
+  width:100%;
+  text-align:center;
+  z-index:3;
+  color:white;
 }
-
-button {
-  pointer-events: auto;
-  background: linear-gradient(#d32f2f, #8b0000);
-  color: white;
-  border: 2px solid gold;
-  padding: 14px 40px;
-  border-radius: 30px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.guide {
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 15px;
-  font-size: 13px;
-}
-
-/* MEDIAPIPE PREVIEW */
-#camera-preview {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  width: 120px;
-  height: 90px;
-  opacity: 0.6;
-  transform: scaleX(-1);
-  border-radius: 8px;
-  z-index: 20;
-}
-
-#error-log {
-  position: fixed;
-  top: 0;
-  left: 0;
-  color: red;
-  background: rgba(0,0,0,0.8);
-  padding: 10px;
-  display: none;
-  z-index: 99;
+button{
+  padding:14px 36px;
+  border-radius:30px;
+  border:2px solid gold;
+  background:#b00000;
+  color:white;
+  font-weight:800;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<!-- CAMERA DISPLAY -->
-<video id="camera" autoplay muted playsinline></video>
+<!-- CAMERA (CHỈ 1 CÁI DUY NHẤT) -->
+<video class="input_video" autoplay muted playsinline></video>
 
-<!-- MEDIAPIPE INPUT -->
-<video class="input_video" style="display:none"></video>
-<canvas id="camera-preview"></canvas>
-
+<!-- THREE -->
 <div id="canvas-container"></div>
 
 <!-- UI -->
 <div id="ui-layer">
-  <div class="guide">
-    🖐 Open | 🫶 Heart | ✊ Fist
-  </div>
-  <button id="btnStart">START MAGIC</button>
+  🖐 Open | 🫶 Heart | ✊ Fist<br><br>
+  <button onclick="startSystem()">START MAGIC</button>
 </div>
 
-<div id="error-log"></div>
-
 <script>
-/* ================= CAMERA ================= */
-(async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    document.getElementById("camera").srcObject = stream;
-  } catch (e) {
-    const log = document.getElementById("error-log");
-    log.style.display = "block";
-    log.innerText = e;
-  }
-})();
+/* =======================
+   THREE.JS – ẢNH BAY
+======================= */
+let scene,camera,renderer,photos=[];
+const images=[
+  "image1.jpeg",
+  "image2.jpeg",
+  "image3.jpeg",
+  "image4.jpeg",
+  "image5.jpeg"
+];
 
-/* ================= THREE ================= */
-let scene, camera3D, renderer;
-function init3D() {
-  scene = new THREE.Scene();
-  camera3D = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 1000);
-  camera3D.position.z = 100;
+function initThree(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,1000);
+  camera.position.z=120;
 
-  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(innerWidth, innerHeight);
+  renderer=new THREE.WebGLRenderer({alpha:true});
+  renderer.setSize(innerWidth,innerHeight);
   document.getElementById("canvas-container").appendChild(renderer.domElement);
+
+  const loader=new THREE.TextureLoader();
+  images.forEach((src,i)=>{
+    const mat=new THREE.SpriteMaterial({map:loader.load(src)});
+    const sp=new THREE.Sprite(mat);
+    sp.scale.set(20,20,1);
+    sp.angle=i*1.2;
+    scene.add(sp);
+    photos.push(sp);
+  });
 
   animate();
 }
 
-function animate() {
+function animate(){
   requestAnimationFrame(animate);
-  renderer.render(scene, camera3D);
+  photos.forEach((p,i)=>{
+    p.angle+=0.002;
+    p.position.x=Math.cos(p.angle+i)*50;
+    p.position.z=Math.sin(p.angle+i)*50;
+  });
+  renderer.render(scene,camera);
 }
 
-/* ================= MEDIAPIPE ================= */
-function initHands() {
-  const inputVideo = document.querySelector(".input_video");
-  const preview = document.getElementById("camera-preview");
-  const ctx = preview.getContext("2d");
+/* =======================
+   MEDIAPIPE – CAMERA FIX
+======================= */
+function startSystem(){
+  initThree();
 
-  const hands = new Hands({
-    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+  const video=document.querySelector(".input_video");
+
+  const hands=new Hands({
+    locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
   });
 
   hands.setOptions({
-    maxNumHands: 2,
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5
+    maxNumHands:2,
+    minDetectionConfidence:0.6,
+    minTrackingConfidence:0.6
   });
 
-  hands.onResults(res => {
-    ctx.clearRect(0,0,preview.width,preview.height);
-    if (res.image) ctx.drawImage(res.image,0,0,preview.width,preview.height);
+  hands.onResults(()=>{});
+
+  const cam=new Camera(video,{
+    onFrame:async()=>{
+      await hands.send({image:video});
+    },
+    width:1280,
+    height:720
   });
 
-  const cam = new Camera(inputVideo, {
-    onFrame: async () => await hands.send({ image: inputVideo }),
-    width: 320,
-    height: 240
-  });
   cam.start();
 }
 
-/* ================= START ================= */
-document.getElementById("btnStart").onclick = () => {
-  document.getElementById("btnStart").style.display = "none";
-  init3D();
-  initHands();
-};
-
-window.onresize = () => {
-  if (!renderer) return;
-  camera3D.aspect = innerWidth/innerHeight;
-  camera3D.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-};
+/* =======================
+   RESIZE
+======================= */
+window.addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
 </script>
 
 </body>
