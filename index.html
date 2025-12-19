@@ -79,7 +79,13 @@
     <div id="copyright">© by vandiep</div>
 
     <div id="canvas-container"></div>
-    <video class="input_video" style="display:none"></video>
+<video
+  class="input_video"
+  playsinline
+  autoplay
+  muted
+  style="display:none">
+</video>
     <canvas id="camera-preview"></canvas>
 
     <script>
@@ -479,14 +485,21 @@
             init3D();
 
             const video = document.getElementsByClassName('input_video')[0];
+            video.width = 320;
+video.height = 240;
+
             const canvas = document.getElementById('camera-preview');
             const ctx = canvas.getContext('2d');
             
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
-            hands.onResults(results => {
-                ctx.clearRect(0,0,100,75); ctx.drawImage(results.image, 0, 0, 100, 75);
+hands.onResults(results => {
+    if (!results || !results.image) return;
+const w = canvas.width;
+const h = canvas.height;
+ctx.clearRect(0, 0, w, h);
+ctx.drawImage(results.image, 0, 0, w, h);
 
                 // --- Hand Logic  ---
                 if (results.multiHandLandmarks.length === 2) {
