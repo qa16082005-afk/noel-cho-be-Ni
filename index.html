@@ -299,6 +299,7 @@
 ctx.fillText("MERRY CHRISTMAS", 512, 100);
 ctx.fillText("BÉ NI", 512, 170);
             const tex = new THREE.CanvasTexture(canvas);
+            tex.needsUpdate = true; //
             const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
             titleMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 15), mat);
             titleMesh.position.set(0, 50, 0);
